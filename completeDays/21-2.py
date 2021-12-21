@@ -46,22 +46,14 @@ def main(filename):
         (p2Pos, 0): 1
     }
     while p1UniverseCount.keys() and p2UniverseCount.keys():
-        oldP1Ct = sum(p1UniverseCount.values())
         p1UniverseCount, newCompleteP1Universes = iterate(p1UniverseCount)
-        newP1Ct = sum(p1UniverseCount.values())
-        f1 = float(newP1Ct) / oldP1Ct
-        p2UniverseCount = { k: f1*v for k, v in p2UniverseCount.iteritems() }
-        completedUniverseCount[0] += newCompleteP1Universes
+        completedUniverseCount[0] += newCompleteP1Universes * sum(p2UniverseCount.values())
 
         if not p1UniverseCount.keys():
             break
 
-        oldP2Ct = sum(p2UniverseCount.values())
         p2UniverseCount, newCompleteP2Universes = iterate(p2UniverseCount)
-        newP2Ct = sum(p2UniverseCount.values())
-        f2 = float(newP2Ct) / oldP2Ct
-        p1UniverseCount = { k: f2*v for k, v in p1UniverseCount.iteritems() }
-        completedUniverseCount[1] += newCompleteP2Universes
+        completedUniverseCount[1] += newCompleteP2Universes * sum(p1UniverseCount.values())
     print(completedUniverseCount)
     print(int(max(completedUniverseCount)))
 
@@ -118,7 +110,7 @@ def iterate(universeCount):
     maxScore = 0
     minScore = 21
     for u in nextUniverseCount.keys():
-        if u[1] >= 400:
+        if u[1] >= 21:
             completedUniverseCount += nextUniverseCount[u]
             uToRemove.append(u)
         maxScore = max(maxScore, u[1])
