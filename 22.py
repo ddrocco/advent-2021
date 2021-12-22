@@ -47,54 +47,30 @@ def main(filename):
             print("Reading instruction %s [%s] [%s]" % (i, "on" if instruction[0] else "off", instruction[1]))
             # Add:
             if instruction[0] == 1:
-                # Check corners
                 newCubes = [Cube(instruction[1])]
-                #print("Corners")
-                for c in cubes:
-                    for corner in c.corners():
-                        nextNewCubes = []
-                        for newCube in newCubes:
-                            nextNewCubes.extend(newCube.splitAtCornerIfOverlap(corner))
-                        newCubes = nextNewCubes
-                
-                # Edges
-                #print("Edges")
-                for other in cubes:
-                    nextNewCubes = []
-                    for new in newCubes:
-                        nextNewCubes.extend(new.splitAtEdgeIfEdgeOverlap(other))
-                    newCubes = nextNewCubes
-
-                prunedNewCubes = []
-                # print("Prunes")
-                for newCube in newCubes:
-                    isGood = True
-                    for cube in cubes:
-                        if newCube.isWithin(cube):
-                            isGood = False
-                            # print("Prune %s" % newCube)
-                            break
-                    if isGood:
-                        prunedNewCubes.append(newCube)
-                cubes.extend(prunedNewCubes)
+                for oldCube in cubes:
+                    fixedNewCubes = []
+                    for newCube in newCubes:
+                        overlap = newCube.getOverlapCube(oldCube)
+                        if overlap:
+                            fixedNewCubes.extend(newCube.subtract(overlap))
+                        else:
+                            fixedNewCubes.append(newCube)
+                    newCubes = fixedNewCubes
+                cubes.extend(newCubes)
+                # TODO: Unionize?
             # subtract:
             else:
                 thisNegativeCube = Cube(instruction[1])
-                # print("Corners")
-                for corner in thisNegativeCube.corners():
-                    allSplitCubes = []
-                    for cube in cubes:
-                        splitCubes = cube.splitAtCornerIfOverlap(corner)
-                        for splitCube in splitCubes:
-                            if not splitCube.isWithin(thisNegativeCube):
-                                # print("%s is not within %s" % (splitCube, thisNegativeCube))
-                                allSplitCubes.append(splitCube)
-                            else:
-                                # print("Pruning %s" % splitCube)
-                                pass
-                    cubes = allSplitCubes
-            # Simplify:
-            # TODO
+                newCubes = []
+                for cube in cubes:
+                    overlap = cube.getOverlapCube(thisNegativeCube)
+                    if overlap:
+                        newCubes.extend(cube.subtract(overlap))
+                    else:
+                        newCubes.append(cube)
+                cubes = newCubes
+                # TODO: Unionize?
 
         vol = 0
         for cube in cubes:
@@ -136,31 +112,6 @@ class Cube(object):
                         self.x[i], self.y[j], self.z[k]
                     ])
         return c
-
-    def edges(self):
-        return {
-            # X edges
-            'x': [
-                [[self.x[0], self.y[0], self.z[0]], [self.x[1], self.y[0], self.z[0]]],
-                [[self.x[0], self.y[1], self.z[0]], [self.x[1], self.y[1], self.z[0]]],
-                [[self.x[0], self.y[0], self.z[1]], [self.x[1], self.y[0], self.z[1]]],
-                [[self.x[0], self.y[1], self.z[1]], [self.x[1], self.y[1], self.z[1]]],
-            ],
-            # Y edges
-            'y': [
-                [[self.x[0], self.y[0], self.z[0]], [self.x[0], self.y[1], self.z[0]]],
-                [[self.x[1], self.y[0], self.z[0]], [self.x[1], self.y[1], self.z[0]]],
-                [[self.x[0], self.y[0], self.z[1]], [self.x[0], self.y[1], self.z[1]]],
-                [[self.x[1], self.y[0], self.z[1]], [self.x[1], self.y[1], self.z[1]]],
-            ],
-            # Z edges
-            'z': [
-                [[self.x[0], self.y[0], self.z[0]], [self.x[0], self.y[0], self.z[1]]],
-                [[self.x[1], self.y[0], self.z[0]], [self.x[1], self.y[0], self.z[1]]],
-                [[self.x[0], self.y[1], self.z[0]], [self.x[0], self.y[1], self.z[1]]],
-                [[self.x[1], self.y[1], self.z[0]], [self.x[1], self.y[1], self.z[1]]],
-            ],
-        }
     
     def volume(self):
         x = self.x[1]-self.x[0]+1
@@ -295,11 +246,12 @@ if False:
 if False:
     print('\nmain\n')
     main('22.input')
-if False:
+if True:
     print('\ndebug\n')
     main('22.debugTest')
 
-if True:
+if False:
+    # Debug Test 1
     c = Cube([[0, 5], [0, 5], [0, 5]])
     print("cvol", c.volume())
     d = Cube(([2, 3], [-5, 15], [2, 3]))
@@ -314,5 +266,12 @@ if True:
     for elt in q:
         vol += elt.volume()
     print("qvol", vol)
+
+if False:
+    # Debug test 2
+    c = Cube([[0, 5], [0, 5], [0, 5]])
+    d = c.subtract(c)
+    print(d)
+
 # 7690165934301608
 # 2758514936282235
