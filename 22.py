@@ -170,7 +170,7 @@ class Cube(object):
         
 
     def splitX(self, x):
-        if x <= self.x[0] or x > self.x[1]:
+        if x < self.x[0] or x > self.x[1]:
             return [self]
         cubeL = Cube([[self.x[0], x-1], self.y, self.z])
         cubeM = Cube([[x,x], self.y, self.z])
@@ -178,7 +178,7 @@ class Cube(object):
         return [cubeL, cubeM, cubeR]
 
     def splitY(self, y):
-        if y <= self.y[0] or y > self.y[1]:
+        if y < self.y[0] or y > self.y[1]:
             return [self]
         cubeU = Cube([self.x, [self.y[0], y-1], self.z])
         cubeM = Cube([self.x, [y,y], self.z])
@@ -186,12 +186,13 @@ class Cube(object):
         return [cubeU, cubeM, cubeD]
 
     def splitZ(self, z):
-        if z <= self.z[0] or z > self.z[1]:
+        if z < self.z[0] or z > self.z[1]:
             return [self]
         cubeF = Cube([self.x, self.y, [self.z[0], z-1]])
         cubeM = Cube([self.x, self.y, [z,z]])
         cubeB = Cube([self.x, self.y, [z+1, self.z[1]]])
-        return [cubeF, cubeM, cubeB]
+        return [
+            cubeF, cubeM, cubeB]
 
     def splitAtCornerIfOverlap(self, corner):
         if (self.x[0] <= corner[0] and corner[0] <= self.x[1] and 
@@ -209,23 +210,18 @@ class Cube(object):
         else:
             return [self]
 
-    def splitAtEdgeIfEdgeOverlap(self, other):
-        unionCube = Cube([
-            [max(self.x[0], other.x[0]), min(self.x[1], other.x[1])],
-            [max(self.y[0], other.y[0]), min(self.y[1], other.y[1])],
-            [max(self.z[0], other.z[0]), min(self.z[1], other.z[1])],
-        ])
-        if unionCube == self or unionCube == other or unionCube.isInvalid():
-            return [self]
+    def subtract(self, other):
         selfCubes = [self]
-        for corner in unionCube.corners():
+        for c in other.corners():
             newSelfCubes = []
-            for cube in selfCubes:
-                newSelfCubes.extend(cube.splitAtCornerIfOverlap(corner))
+            for selfCube in selfCubes:
+                newElts = selfCube.splitAtCornerIfOverlap(c)
+                for newElt in newElts:
+                    if not newElt.isWithin(other) and not newElt.isInvalid():
+                        newSelfCubes.append(newElt)
             selfCubes = newSelfCubes
-        if selfCubes != [self]:
-            print("New splits")
-        return selfCubes
+        # return selfCubes
+        return unionize(selfCubes)
 
     def getOverlapCube(self, other):
         unionCube = Cube([
@@ -235,13 +231,57 @@ class Cube(object):
         ])
         if unionCube == self or unionCube == other or unionCube.isInvalid():
             return None
-        print(unionCube)
         return unionCube
 
 
     def isInvalid(self):
         return self.x[1] < self.x[0] or self.y[1] < self.y[0] or self.z[1] < self.z[0]
-            
+
+def unionize(cubeArray):
+    changed = True
+    while changed == True:
+        toRemove = []
+        toAdd = []
+        changed = False
+        for i, cube1 in enumerate(cubeArray):
+            if cube1 in toRemove:
+                break
+            for j, cube2 in enumerate(cubeArray[i+1:]):
+                if cube2 in toRemove:
+                    break
+                # z
+                if cube1.x == cube2.x and cube1.y == cube2.y and (min(cube1.z[1], cube2.z[1]) + 1 == max(cube1.z[0], cube2.z[0])):
+                    toRemove.append(cube1)
+                    toRemove.append(cube2)
+                    toAdd.append(Cube(
+                        [cube1.x, cube1.y, [min(cube1.z[0], cube2.z[0]), max(cube1.z[1], cube2.z[1])]]
+                    ))
+                    changed = True
+                    break
+                # x
+                if cube1.z == cube2.z and cube1.y == cube2.y and (min(cube1.x[1], cube2.x[1]) + 1 == max(cube1.x[0], cube2.x[0])):
+                    toRemove.append(cube1)
+                    toRemove.append(cube2)
+                    toAdd.append(Cube(
+                        [[min(cube1.x[0], cube2.x[0]), max(cube1.x[1], cube2.x[1])], cube1.y, cube1.z]
+                    ))
+                    changed = True
+                    break
+                # y
+                if cube1.z == cube2.z and cube1.x == cube2.x and (min(cube1.y[1], cube2.y[1]) + 1 == max(cube1.y[0], cube2.y[0])):
+                    toRemove.append(cube1)
+                    toRemove.append(cube2)
+                    toAdd.append(Cube(
+                        [cube1.x, [min(cube1.y[0], cube2.y[0]), max(cube1.y[1], cube2.y[1])], cube1.z]
+                    ))
+                    changed = True
+                    break
+        for elt in toRemove:
+            cubeArray.remove(elt)
+        for elt in toAdd:
+            cubeArray.append(elt)
+    return cubeArray
+
 
 if False:
     print('\nsmall test\n')
@@ -261,8 +301,18 @@ if False:
 
 if True:
     c = Cube([[0, 5], [0, 5], [0, 5]])
+    print("cvol", c.volume())
     d = Cube(([2, 3], [-5, 15], [2, 3]))
+    print("dvol", d.volume())
     e = c.getOverlapCube(d)
     print(e)
+    print("evol", e.volume())
+    print("~")
+    q = c.subtract(e)
+    print(q)
+    vol = 0
+    for elt in q:
+        vol += elt.volume()
+    print("qvol", vol)
 # 7690165934301608
 # 2758514936282235
