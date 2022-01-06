@@ -44,21 +44,25 @@ def main(filename):
     if True:
         cubes = []
         for i, instruction in enumerate(inputInstructions):
-            print("Reading instruction %s [%s] [%s]" % (i, "on" if instruction[0] else "off", instruction[1]))
+            print("Reading instruction %s [%s] [%s]\n\n" % (i, "on" if instruction[0] else "off", instruction[1]))
             # Add:
             if instruction[0] == 1:
                 newCubes = [Cube(instruction[1])]
+                # printVol(newCubes)
                 for oldCube in cubes:
+                    # print("SUBTRACTING %s" % oldCube)
                     fixedNewCubes = []
                     for newCube in newCubes:
                         overlap = newCube.getOverlapCube(oldCube)
                         if overlap:
+                            # print("Subtracting %s" % overlap)
                             fixedNewCubes.extend(newCube.subtract(overlap))
                         else:
                             fixedNewCubes.append(newCube)
                     newCubes = fixedNewCubes
                 cubes.extend(newCubes)
-                # TODO: Unionize?
+                # printVol(newCubes)
+                cubes = unionize(cubes)
             # subtract:
             else:
                 thisNegativeCube = Cube(instruction[1])
@@ -70,13 +74,17 @@ def main(filename):
                     else:
                         newCubes.append(cube)
                 cubes = newCubes
-                # TODO: Unionize?
+                cubes = unionize(cubes)
+            # print(cubes)
+            # printVol(cubes)
 
-        vol = 0
-        for cube in cubes:
-            vol += cube.volume()
-            # print(cube)
-        print(vol)
+        printVol(cubes)
+
+def printVol(cubeArray):
+    vol = 0
+    for cube in cubeArray:
+        vol += cube.volume()
+    print(vol)
 
 class Cube(object):
     def __init__(self, coords):
@@ -180,7 +188,7 @@ class Cube(object):
             [max(self.y[0], other.y[0]), min(self.y[1], other.y[1])],
             [max(self.z[0], other.z[0]), min(self.z[1], other.z[1])],
         ])
-        if unionCube == self or unionCube == other or unionCube.isInvalid():
+        if unionCube.isInvalid():
             return None
         return unionCube
 
@@ -235,18 +243,15 @@ def unionize(cubeArray):
 
 
 if False:
-    print('\nsmall test\n')
-    main('22.smallTest')
-if False:
     print('\ntest\n')
-    main('22.test')
+    main('22.pt1Test')
 if False:
     print('\ntest2\n')
-    main('22.test2')
-if False:
+    main('22.pt2Test')
+if True:
     print('\nmain\n')
     main('22.input')
-if True:
+if False:
     print('\ndebug\n')
     main('22.debugTest')
 
@@ -272,6 +277,14 @@ if False:
     c = Cube([[0, 5], [0, 5], [0, 5]])
     d = c.subtract(c)
     print(d)
+
+if False:
+    # Debug test 3
+    # biggerOne = Cube([[-22, 28], [-29, 23], [-38, 16]])
+    smallerOne = Cube([[-19,28],[18,23],[8,16]])
+    subtractee = Cube([[-19,33],[18,23],[8,28]])
+    overlap = smallerOne.getOverlapCube(subtractee)
+    print(overlap)
 
 # 7690165934301608
 # 2758514936282235
