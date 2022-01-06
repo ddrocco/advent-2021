@@ -1,0 +1,17 @@
+#############
+#...........#
+###B#C#B#D###
+  #A#D#C#A#
+  #########
+
+Min movement:
+9 total B
+9 total A
+4 total C
+12 total D
+
+Except:
+B wastes 2 movement bc it needs to trade with C
+A wastes 2 movement bc it needs to trade with B
+
+= 12499
