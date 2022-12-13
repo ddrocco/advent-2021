@@ -5,7 +5,7 @@ def main():
     with open('13.test_input') as f:
         lines = f.readlines()
     testInputs = [line.rstrip() for line in lines]
-    # impl('test', testInputs)
+    impl('test', testInputs)
     
     with open('13.input') as f:
         lines = f.readlines()
@@ -14,6 +14,7 @@ def main():
 
 def impl(case, input):
     pt1(case, input)
+    pt2(case, input)
 
 def pt1(case, input):
     sum = 0
@@ -21,13 +22,44 @@ def pt1(case, input):
         left = parseAsArrayOfInt(input[lineIndex])
         right = parseAsArrayOfInt(input[lineIndex+1])
 
-        if isCorrect(left, right):
+        if leftBelowRight(left, right):
             # print("True: ", i+1)
             sum += i+1
-
     print('%s pt1: %s' % (case, sum))
 
-def isCorrect(left, right):
+def pt2(case, input):
+    unsortedArrays = []
+    for line in input:
+        if len(line) == 0:
+            pass
+        else:
+            unsortedArrays.append(parseAsArrayOfInt(line))
+    unsortedArrays.append([[2]])
+    unsortedArrays.append([[6]])
+    sortedArrays = []
+    lenArrays = len(unsortedArrays)
+    sortedArrays.append(unsortedArrays.pop())
+
+    while len(sortedArrays) < lenArrays:
+        newArr = unsortedArrays.pop()
+        foundSpot = False
+        for i, arr in enumerate(sortedArrays):
+            if leftBelowRight(newArr, arr):
+                sortedArrays.insert(i, newArr)
+                foundSpot = True
+                break
+        if not foundSpot:
+            sortedArrays.append(newArr)
+
+    indices = []
+    for i, arr in enumerate(sortedArrays):
+        if arr == [[2]] or arr == [[6]]:
+            indices.append(i+1)
+
+    print('%s pt2: %s' % (case, indices[0] * indices[1]))    
+            
+
+def leftBelowRight(left, right):
     # print("Comparing", left, right)
     if type(left) != type([]):
         # print("Left is converted to array")
@@ -50,7 +82,7 @@ def isCorrect(left, right):
             else:
                 # print("Vals equal")
                 continue
-        val = isCorrect(elt, right[i])
+        val = leftBelowRight(elt, right[i])
         if val is not None:
             return val
         else:
