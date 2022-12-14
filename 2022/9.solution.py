@@ -1,4 +1,4 @@
-import copy
+from util.set import set
 
 def main():
     with open('9.test_input') as f:
@@ -84,17 +84,6 @@ def updateKnot(h, t):
         if h[0] != t[0]:
             retTail[0] = h[0]
     return retTail
-
-
-class set(object):
-    def __init__(self, elts):
-        self.underlyingData = {}
-        for elt in elts:
-            self.underlyingData[elt] = True
-    def add(self, elt):
-        self.underlyingData[elt] = True
-    def count(self):
-        return len(self.underlyingData)
 
 
 main()
